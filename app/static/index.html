@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAPTCHA Solving &amp; Verification Tool</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #334155;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-dark: #0284c7;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    header h1 { margin: 0; font-size: 1.25rem; font-weight: 700; }
+    header .sub { color: var(--muted); font-size: 0.85rem; }
+    .container { max-width: 1260px; margin: 0 auto; padding: 24px 20px; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .kpi .label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .kpi .val { font-size: 1.5rem; font-weight: 700; margin-top: 4px; color: var(--accent); }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+    .tab-btn {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .tab-btn.active { background: var(--accent-dark); color: #fff; border-color: var(--accent); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+    .card h2 { margin-top: 0; font-size: 1.05rem; }
+    .row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    input[type="text"], select, textarea {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+    }
+    button.primary {
+      background: var(--accent-dark);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border: none;
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; background: rgba(15, 23, 42, 0.45); }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .b-ok { background: rgba(34, 197, 94, 0.18); color: #4ade80; }
+    .b-warn { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
+    .b-err { background: rgba(239, 68, 68, 0.18); color: #f87171; }
+    .b-info { background: rgba(56, 189, 248, 0.18); color: #38bdf8; }
+    pre {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      color: #e2e8f0;
+    }
+    .img-box {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      align-items: flex-start;
+    }
+    .img-box img {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      max-height: 90px;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>CAPTCHA Solving &amp; Verification Tool</h1>
+    <div class="sub">Authorized Test Harness &bull; OpenCV + Tesseract Solver &bull; Official Token Verification &bull; Selenium Form Handler</div>
+  </div>
+  <button class="secondary" onclick="refreshAll()">Refresh Metrics</button>
+</header>
+
+<div class="container">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="label">Imported Contact Pages</div><div class="val" id="kpi-contacts">0</div></div>
+    <div class="kpi"><div class="label">Total Attempts</div><div class="val" id="kpi-attempts">0</div></div>
+    <div class="kpi"><div class="label">Success / Failed</div><div class="val" id="kpi-sf">0 / 0</div></div>
+    <div class="kpi"><div class="label">Avg Processing Time</div><div class="val" id="kpi-ms">0 ms</div></div>
+    <div class="kpi"><div class="label">Est. API Cost</div><div class="val" id="kpi-cost">$0.00</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('contacts', this)">1. Imported Contact Pages (CSV)</button>
+    <button class="tab-btn" onclick="switchTab('solver', this)">2. Recognition &amp; OCR Solver</button>
+    <button class="tab-btn" onclick="switchTab('browser', this)">3. Browser Form Automation</button>
+    <button class="tab-btn" onclick="switchTab('tokens', this)">4. Token Verification</button>
+    <button class="tab-btn" onclick="switchTab('metrics', this)">5. Benchmark &amp; Cost Report</button>
+  </div>
+
+  <!-- TAB 1: CONTACTS CSV -->
+  <div id="tab-contacts" class="panel active">
+    <div class="card">
+      <h2>Import &amp; Filter Contact Us Forms</h2>
+      <div class="row" style="margin-bottom: 12px;">
+        <input type="file" id="csv-file" accept=".csv" />
+        <button class="primary" onclick="uploadCsv()">Import CSV</button>
+        <input type="text" id="filter-q" placeholder="Search company or URL..." oninput="loadContacts()" />
+        <select id="filter-captcha" onchange="loadContacts()">
+          <option value="all">All CAPTCHA Types</option>
+          <option value="reCAPTCHA">reCAPTCHA</option>
+          <option value="invisible reCAPTCHA">invisible reCAPTCHA</option>
+          <option value="Turnstile">Turnstile</option>
+          <option value="hCaptcha">hCaptcha</option>
+          <option value="none">none</option>
+        </select>
+        <select id="filter-platform" onchange="loadContacts()">
+          <option value="all">All Platforms</option>
+        </select>
+      </div>
+      <div id="csv-summary" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--muted);"></div>
+      <div style="max-height: 440px; overflow-y: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Company</th><th>Platform</th><th>Detected CAPTCHA</th><th>Contact Page</th><th>Authorized Test Action</th>
+            </tr>
+          </thead>
+          <tbody id="contacts-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SOLVER & DETECTOR -->
+  <div id="tab-solver" class="panel">
+    <div class="card">
+      <h2>Synthetic CAPTCHA Generator &amp; Custom OCR Solver</h2>
+      <div class="row">
+        <select id="syn-kind">
+          <option value="text">Synthetic Text</option>
+          <option value="math">Synthetic Math</option>
+        </select>
+        <select id="syn-diff">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+        <button class="primary" onclick="generateAndSolve()">Generate &amp; Solve</button>
+        <input type="file" id="upload-img" accept="image/*" />
+        <button class="secondary" onclick="solveUploadedImage()">Solve Uploaded Image</button>
+      </div>
+      <div class="img-box" id="ocr-images" style="display:none;">
+        <div><div class="sub">Original CAPTCHA</div><img id="img-orig" alt="Original" /></div>
+        <div><div class="sub">OpenCV Preprocessed</div><img id="img-proc" alt="Preprocessed" /></div>
+      </div>
+      <pre id="ocr-output" style="margin-top:12px;">Click "Generate &amp; Solve" or upload an image.</pre>
+    </div>
+
+    <div class="card">
+      <h2>HTML / DOM CAPTCHA Recognition Tester</h2>
+      <textarea id="html-snippet" rows="4" style="width:100%;" placeholder="Paste Contact Us HTML snippet (e.g. <div class='cf-turnstile' data-sitekey='1x00000000000000000000AA'></div>)"></textarea>
+      <div class="row" style="margin-top:10px;">
+        <button class="primary" onclick="detectHtml()">Identify Challenge</button>
+        <button class="secondary" onclick="setSnippet('recaptcha')">Sample reCAPTCHA</button>
+        <button class="secondary" onclick="setSnippet('turnstile')">Sample Turnstile</button>
+        <button class="secondary" onclick="setSnippet('geetest')">Sample Unsupported (GeeTest)</button>
+      </div>
+      <pre id="detect-output" style="margin-top:12px;">Awaiting HTML snippet...</pre>
+    </div>
+  </div>
+
+  <!-- TAB 3: BROWSER AUTOMATION -->
+  <div id="tab-browser" class="panel">
+    <div class="card">
+      <h2>Selenium Headless Chromium — Contact Us Form Workflow</h2>
+      <p style="color:var(--muted); font-size:0.88rem; margin-top:0;">
+        Launches headless Chromium via Selenium against an authorized local Contact Us test form, detects any CAPTCHA, solves/handles it, fills form fields, submits, and verifies server-side acceptance.
+      </p>
+      <div class="row">
+        <select id="auto-kind">
+          <option value="synthetic_text">Local Form: Synthetic Text CAPTCHA</option>
+          <option value="synthetic_math">Local Form: Synthetic Math CAPTCHA</option>
+          <option value="recaptcha_v2">Local Form: Google reCAPTCHA v2 Test</option>
+          <option value="recaptcha_invisible">Local Form: Invisible reCAPTCHA Test</option>
+          <option value="hcaptcha">Local Form: hCaptcha Test</option>
+          <option value="turnstile">Local Form: Cloudflare Turnstile Test</option>
+          <option value="none">Local Form: No CAPTCHA</option>
+          <option value="unsupported">Local Form: Unsupported (GeeTest)</option>
+        </select>
+        <button class="primary" onclick="runAutomation()">Run Browser Automation</button>
+      </div>
+      <pre id="auto-output" style="margin-top:12px;">Select a test form and click "Run Browser Automation".</pre>
+    </div>
+  </div>
+
+  <!-- TAB 4: TOKEN VERIFICATION -->
+  <div id="tab-tokens" class="panel">
+    <div class="card">
+      <h2>Official Provider &amp; Local HMAC Token Verification</h2>
+      <div class="row" style="margin-bottom:10px;">
+        <select id="tok-provider">
+          <option value="recaptcha_v2">Google reCAPTCHA v2</option>
+          <option value="hcaptcha">hCaptcha</option>
+          <option value="turnstile">Cloudflare Turnstile</option>
+        </select>
+        <button class="primary" onclick="issueToken()">1. Issue Valid Test Token</button>
+        <button class="secondary" onclick="issueExpiredToken()">Issue Expired Token</button>
+        <button class="secondary" onclick="setTokenVal('INVALID_TOKEN')">Set Invalid Token</button>
+        <button class="secondary" onclick="setTokenVal('')">Set Missing Token</button>
+      </div>
+      <div class="row">
+        <input type="text" id="tok-value" style="flex:1;" placeholder="Verification token..." />
+        <button class="primary" onclick="verifyToken()">2. Verify Token</button>
+      </div>
+      <pre id="tok-output" style="margin-top:12px;">Issue or enter a token and click "Verify Token" (try verifying the same valid token twice to test replay protection).</pre>
+    </div>
+  </div>
+
+  <!-- TAB 5: METRICS & BENCHMARK -->
+  <div id="tab-metrics" class="panel">
+    <div class="card">
+      <h2>Batch Synthetic Dataset Accuracy Benchmark</h2>
+      <div class="row">
+        <select id="bench-kind">
+          <option value="text">Synthetic Text</option>
+          <option value="math">Synthetic Math</option>
+        </select>
+        <select id="bench-count">
+          <option value="10">10 Challenges</option>
+          <option value="20">20 Challenges</option>
+        </select>
+        <button class="primary" onclick="runBenchmark()">Run Batch Benchmark</button>
+      </div>
+      <pre id="bench-output" style="margin-top:12px;">Click "Run Batch Benchmark" to measure OCR accuracy and average latency.</pre>
+    </div>
+
+    <div class="card">
+      <h2>Recent Processing Attempts</h2>
+      <table>
+        <thead>
+          <tr><th>Time</th><th>Challenge</th><th>Method</th><th>Status</th><th>Latency</th><th>Est. Cost</th><th>Detail</th></tr>
+        </thead>
+        <tbody id="attempts-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Cost Breakdown (Local vs. Third-Party APIs)</h2>
+      <table>
+        <thead>
+          <tr><th>Provider</th><th>Challenge Type</th><th>Cost / 1k (USD)</th><th>Per-Challenge (USD)</th><th>Notes</th></tr>
+        </thead>
+        <tbody id="pricing-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+async function loadContacts() {
+  const q = encodeURIComponent(document.getElementById('filter-q').value || '');
+  const cap = encodeURIComponent(document.getElementById('filter-captcha').value);
+  const plat = encodeURIComponent(document.getElementById('filter-platform').value);
+  const res = await fetch(`/api/contacts?q=${q}&captcha=${cap}&platform=${plat}`);
+  const data = await res.json();
+  document.getElementById('kpi-contacts').textContent = data.total;
+
+  const platSel = document.getElementById('filter-platform');
+  if (platSel.options.length <= 1 && data.platform_summary) {
+    Object.keys(data.platform_summary).sort().forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p; opt.textContent = `${p} (${data.platform_summary[p]})`;
+      platSel.appendChild(opt);
+    });
+  }
+
+  const summaryParts = Object.entries(data.captcha_summary || {}).map(([k, v]) => `${k}: ${v}`);
+  document.getElementById('csv-summary').textContent = `Showing ${data.records.length} of ${data.filtered_count} matching rows | Distribution: ${summaryParts.join(' • ')}`;
+
+  const tbody = document.getElementById('contacts-tbody');
+  tbody.innerHTML = data.records.map(r => `
+    <tr>
+      <td>${r.id}</td>
+      <td><strong>${r.company}</strong></td>
+      <td>${r.platform}</td>
+      <td><span class="badge ${r.challenge_type === 'none' ? 'b-ok' : 'b-info'}">${r.captcha_raw || 'none'}</span></td>
+      <td><a href="${r.contact_page}" target="_blank" style="color:var(--accent);">${r.contact_page}</a></td>
+      <td><button class="secondary" onclick="testSiteHandler('${r.challenge_type}', '${r.company.replace(/'/g, '')}')">Simulate Handler</button></td>
+    </tr>
+  `).join('');
+}
+
+async function uploadCsv() {
+  const f = document.getElementById('csv-file').files[0];
+  if (!f) return alert('Select a CSV file first.');
+  const fd = new FormData();
+  fd.append('file', f);
+  const res = await fetch('/api/import-csv', { method: 'POST', body: fd });
+  const data = await res.json();
+  alert(`Imported ${data.total} rows from ${data.filename}`);
+  await loadContacts();
+}
+
+async function testSiteHandler(challengeType, company) {
+  switchTab('browser', document.querySelectorAll('.tab-btn')[2]);
+  document.getElementById('auto-kind').value = challengeType;
+  document.getElementById('auto-output').textContent = `Running Selenium test harness for "${company}" (${challengeType})...`;
+  const res = await fetch('/api/automate-form', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ target_kind: challengeType, company_name: company })
+  });
+  const data = await res.json();
+  document.getElementById('auto-output').textContent = JSON.stringify(data, null, 2);
+  await loadStats();
+}
+
+async function generateAndSolve() {
+  const kind = document.getElementById('syn-kind').value;
+  const diff = document.getElementById('syn-diff').value;
+  const gRes = await fetch(`/api/generate-synthetic?kind=${kind}&difficulty=${diff}`);
+  const gen = await gRes.json();
+
+  const fd = new FormData();
+  fd.append('image_base64', gen.image_base64);
+  fd.append('mode', kind);
+  fd.append('expected_answer', gen.expected_answer);
+  const sRes = await fetch('/api/solve-image', { method: 'POST', body: fd });
+  const solved = await sRes.json();
+
+  document.getElementById('ocr-images').style.display = 'flex';
+  document.getElementById('img-orig').src = 'data:image/png;base64,' + gen.image_base64;
+  document.getElementById('img-proc').src = 'data:image/png;base64,' + solved.preprocessed_image_base64;
+  delete solved.preprocessed_image_base64;
+  document.getElementById('ocr-output').textContent = JSON.stringify({ expected: gen.expected_answer, ...solved }, null, 2);
+  await loadStats();
+}
+
+async function solveUploadedImage() {
+  const f = document.getElementById('upload-img').files[0];
+  if (!f) return alert('Choose an image file.');
+  const fd = new FormData();
+  fd.append('file', f);
+  fd.append('mode', 'auto');
+  const sRes = await fetch('/api/solve-image', { method: 'POST', body: fd });
+  const solved = await sRes.json();
+  document.getElementById('ocr-images').style.display = 'flex';
+  document.getElementById('img-orig').src = URL.createObjectURL(f);
+  document.getElementById('img-proc').src = 'data:image/png;base64,' + solved.preprocessed_image_base64;
+  delete solved.preprocessed_image_base64;
+  document.getElementById('ocr-output').textContent = JSON.stringify(solved, null, 2);
+  await loadStats();
+}
+
+function setSnippet(type) {
+  const map = {
+    recaptcha: '<form><div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div><script src="https://www.google.com/recaptcha/api.js"><\/script></form>',
+    turnstile: '<form><div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js"><\/script></form>',
+    geetest: '<form><div class="geetest_challenge" src="https://gt.geetest.com/gt.js"></div></form>'
+  };
+  document.getElementById('html-snippet').value = map[type] || '';
+}
+
+async function detectHtml() {
+  const html = document.getElementById('html-snippet').value;
+  const res = await fetch('/api/detect', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ html })
+  });
+  document.getElementById('detect-output').textContent = JSON.stringify(await res.json(), null, 2);
+}
+
+async function runAutomation() {
+  const kind = document.getElementById('auto-kind').value;
+  document.getElementById('auto-output').textContent = 'Running Selenium headless Chromium...';
+  const res = await fetch('/api/automate-form', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ target_kind: kind })
+  });
+  document.getElementById('auto-output').textContent = JSON.stringify(await res.json(), null, 2);
+  await loadStats();
+}
+
+async function issueToken() {
+  const provider = document.getElementById('tok-provider').value;
+  const res = await fetch('/api/issue-test-token', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ provider, ttl_seconds: 120 })
+  });
+  const data = await res.json();
+  document.getElementById('tok-value').value = data.token;
+}
+
+async function issueExpiredToken() {
+  const provider = document.getElementById('tok-provider').value;
+  const res = await fetch('/api/issue-test-token', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ provider, ttl_seconds: -10 })
+  });
+  const data = await res.json();
+  document.getElementById('tok-value').value = data.token;
+}
+
+function setTokenVal(v) { document.getElementById('tok-value').value = v; }
+
+async function verifyToken() {
+  const provider = document.getElementById('tok-provider').value;
+  const token = document.getElementById('tok-value').value;
+  const res = await fetch('/api/verify-token', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ provider, token })
+  });
+  document.getElementById('tok-output').textContent = JSON.stringify(await res.json(), null, 2);
+  await loadStats();
+}
+
+async function runBenchmark() {
+  const kind = document.getElementById('bench-kind').value;
+  const count = parseInt(document.getElementById('bench-count').value, 10);
+  document.getElementById('bench-output').textContent = 'Running benchmark...';
+  const res = await fetch('/api/batch-benchmark', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ kind, count, difficulty: 'medium' })
+  });
+  document.getElementById('bench-output').textContent = JSON.stringify(await res.json(), null, 2);
+  await loadStats();
+}
+
+async function loadStats() {
+  const res = await fetch('/api/stats');
+  const s = await res.json();
+  document.getElementById('kpi-attempts').textContent = s.total_attempts;
+  document.getElementById('kpi-sf').textContent = `${s.successful_attempts} / ${s.failed_attempts}`;
+  document.getElementById('kpi-ms').textContent = `${s.avg_processing_ms} ms`;
+  document.getElementById('kpi-cost').textContent = `$${s.total_estimated_cost_usd.toFixed(4)}`;
+
+  document.getElementById('attempts-tbody').innerHTML = s.recent_attempts.map(a => `
+    <tr>
+      <td>${a.timestamp}</td>
+      <td>${a.challenge_type}</td>
+      <td>${a.method}</td>
+      <td><span class="badge ${a.success ? 'b-ok' : 'b-err'}">${a.success ? 'Success' : 'Failed'}</span></td>
+      <td>${a.processing_ms} ms</td>
+      <td>$${a.estimated_cost_usd.toFixed(5)}</td>
+      <td>${a.detail}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadPricing() {
+  const res = await fetch('/api/pricing');
+  const d = await res.json();
+  document.getElementById('pricing-tbody').innerHTML = d.pricing.map(p => `
+    <tr>
+      <td><strong>${p.provider}</strong></td>
+      <td>${p.challenge_type}</td>
+      <td>$${p.cost_per_1k_usd.toFixed(2)}</td>
+      <td>$${p.cost_per_challenge_usd.toFixed(6)}</td>
+      <td>${p.notes}</td>
+    </tr>
+  `).join('');
+}
+
+async function refreshAll() {
+  await Promise.all([loadContacts(), loadStats(), loadPricing()]);
+}
+refreshAll();
+</script>
+</body>
+</html>
