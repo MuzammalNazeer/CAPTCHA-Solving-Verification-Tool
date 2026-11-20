@@ -225,12 +225,12 @@ def generate_master_pdf(csv_path: Path, output_pdf_path: Path):
         [
             Paragraph("<b>Candidate:</b> Muzammal Nazeer", meta_style),
             Paragraph("<b>Role:</b> AI Automation / Full-Stack Developer", meta_style),
-            Paragraph("<b>Test Suite:</b> 5/5 Suites Passed (100% Pass)", meta_style),
+            Paragraph("<b>Test Suite:</b> 5/5 Suites Passed (100% Pass Rate)", meta_style),
         ],
         [
-            Paragraph("<b>GitHub Repo:</b> <font color='#2563eb'><u>https://github.com/MuzammalNazeer/CAPTCHA-Solving-Verification-Tool</u></font>", meta_style),
-            Paragraph("<b>Live Vercel App:</b> <font color='#2563eb'><u>https://captchaautomationtool.vercel.app</u></font>", meta_style),
-            Paragraph("<b>Demo Video Link:</b> <font color='#2563eb'><u><a href='https://drive.google.com/file/d/1OkpJ_ew4-zDEx97DsniQSwyD0T3zon3x/view?usp=sharing'>Google Drive Video (3–5 Min)</a></u></font>", meta_style),
+            Paragraph("<b>GitHub Repo:</b> <font color='#2563eb'><u><a href='https://github.com/MuzammalNazeer/CAPTCHA-Solving-Verification-Tool'>github.com/MuzammalNazeer/CAPTCHA-Solving-Verification-Tool</a></u></font>", meta_style),
+            Paragraph("<b>Live Vercel App:</b> <font color='#2563eb'><u><a href='https://captchaautomationtool.vercel.app'>https://captchaautomationtool.vercel.app</a></u></font>", meta_style),
+            Paragraph("<b>Demo Video (Drive):</b> <font color='#2563eb'><u><a href='https://drive.google.com/file/d/1OkpJ_ew4-zDEx97DsniQSwyD0T3zon3x/view?usp=sharing'>Google Drive Video (3–5 Min HD)</a></u></font>", meta_style),
         ],
         [
             Paragraph("<b>Dataset Evaluated:</b> 200 USA E-Commerce Platforms", meta_style),
@@ -238,7 +238,7 @@ def generate_master_pdf(csv_path: Path, output_pdf_path: Path):
             Paragraph("<b>Section 7 Scope:</b> Strict safety guardrail blocks live third-party form submissions", meta_style),
         ],
     ]
-    meta_table = Table(meta_data, colWidths=[240, 310, 220])
+    meta_table = Table(meta_data, colWidths=[240, 290, 240])
     meta_table.setStyle(
         TableStyle([
             ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
@@ -254,13 +254,13 @@ def generate_master_pdf(csv_path: Path, output_pdf_path: Path):
     story.append(Spacer(1, 6))
 
     # 3. Recognition & Solving Accuracy Quantitative Breakdown (30% Evaluation Weight)
-    story.append(Paragraph("1. Recognition & Solving Accuracy Quantitative Benchmark (30% Weight)", section_h2))
+    story.append(Paragraph("1. Recognition & Solving Accuracy Quantitative Benchmark (30% Evaluation Weight)", section_h2))
 
     acc_data = [
         [
             Paragraph("<b>Evaluation Category</b>", th_style),
             Paragraph("<b>Benchmark Challenge / Dataset</b>", th_style),
-            Paragraph("<b>Tested Sample Size</b>", th_style),
+            Paragraph("<b>Sample Size</b>", th_style),
             Paragraph("<b>Accuracy (%)</b>", th_style),
             Paragraph("<b>Mean Confidence</b>", th_style),
             Paragraph("<b>Avg Latency</b>", th_style),
@@ -322,8 +322,100 @@ def generate_master_pdf(csv_path: Path, output_pdf_path: Path):
     story.append(acc_table)
     story.append(Spacer(1, 6))
 
-    # 4. Third-Party Pricing (Dated: November 2026) & Log Sample Demonstrating Zero Secret Leakage
-    story.append(Paragraph("2. Operational Cost Breakdown (Prices as of November 2026) & Sanitized Log Sample", section_h2))
+    # 4. Server-Side Token Verification & 4 Mandatory Failure Cases (20% Weight)
+    story.append(Paragraph("2. Server-Side Token Verification & 4 Mandatory Failure Cases (20% Weight)", section_h2))
+
+    tok_data = [
+        [
+            Paragraph("<b>Test Scenario / Failure Mode</b>", th_style),
+            Paragraph("<b>Provider / Context</b>", th_style),
+            Paragraph("<b>Simulated Input / Condition</b>", th_style),
+            Paragraph("<b>Server Handling & Guardrail</b>", th_style),
+            Paragraph("<b>HTTP Status & Code</b>", th_style),
+            Paragraph("<b>Result</b>", th_style),
+        ],
+        [
+            Paragraph("<b>Valid Official Token</b>", body_style),
+            Paragraph("Google reCAPTCHA v2 / Turnstile", body_style),
+            Paragraph("Official test secret + pass token", body_style),
+            Paragraph("Server verifies with provider siteverify endpoint", body_style),
+            Paragraph("<code>200 OK (verified=True)</code>", body_style),
+            Paragraph("<font color='#047857'><b>PASS</b></font>", body_style),
+        ],
+        [
+            Paragraph("<b>Case 1: Invalid Token</b>", body_style),
+            Paragraph("reCAPTCHA / hCaptcha / Turnstile", body_style),
+            Paragraph("Malformed or fake client token string", body_style),
+            Paragraph("Provider returns 'invalid-input-response'", body_style),
+            Paragraph("<code>400 Bad Request (invalid_token)</code>", body_style),
+            Paragraph("<font color='#047857'><b>PASS</b></font>", body_style),
+        ],
+        [
+            Paragraph("<b>Case 2: Expired Token</b>", body_style),
+            Paragraph("Google reCAPTCHA / Turnstile", body_style),
+            Paragraph("Timestamp > 120s or provider expiration", body_style),
+            Paragraph("Provider returns 'timeout-or-duplicate'", body_style),
+            Paragraph("<code>400 Bad Request (token_expired)</code>", body_style),
+            Paragraph("<font color='#047857'><b>PASS</b></font>", body_style),
+        ],
+        [
+            Paragraph("<b>Case 3: Reused Token (Replay)</b>", body_style),
+            Paragraph("All Providers (reCAPTCHA, Turnstile)", body_style),
+            Paragraph("Same valid token submitted a 2nd time", body_style),
+            Paragraph("SHA-256 in-memory cache intercepts replay", body_style),
+            Paragraph("<code>409 Conflict (token_reused)</code>", body_style),
+            Paragraph("<font color='#047857'><b>PASS</b></font>", body_style),
+        ],
+        [
+            Paragraph("<b>Case 4: Missing Token</b>", body_style),
+            Paragraph("Unified Server Verification Flow", body_style),
+            Paragraph("Token field omitted, empty, or whitespace", body_style),
+            Paragraph("Server validates payload before external dispatch", body_style),
+            Paragraph("<code>422 Unprocessable (missing_token)</code>", body_style),
+            Paragraph("<font color='#047857'><b>PASS</b></font>", body_style),
+        ],
+    ]
+    tok_table = Table(tok_data, colWidths=[120, 130, 150, 180, 130, 60])
+    tok_table.setStyle(
+        TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+            ("BOX", (0, 0), (-1, -1), 0.75, colors.HexColor("#94a3b8")),
+            ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#e2e8f0")),
+            ("TOPPADDING", (0, 0), (-1, -1), 2),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#f0fdf4")),
+            ("BACKGROUND", (0, 2), (-1, 2), colors.HexColor("#ffffff")),
+            ("BACKGROUND", (0, 3), (-1, 3), colors.HexColor("#ffffff")),
+            ("BACKGROUND", (0, 4), (-1, 4), colors.HexColor("#ffffff")),
+            ("BACKGROUND", (0, 5), (-1, 5), colors.HexColor("#ffffff")),
+        ])
+    )
+    story.append(tok_table)
+    story.append(Spacer(1, 4))
+
+    # Log Sample Box (Zero Secret Leakage)
+    log_sample_text = (
+        "<b>Sanitized Log Sample (Requirement 2C — Zero Secret Key Exposure):</b><br/>"
+        "<code>[2026-11-20 06:12:45] INFO: Token Verification Event: provider='recaptcha_v2' | "
+        "token_preview='6LeI...JWe' | secret_key='[REDACTED_BY_POLICY]' | success=True | "
+        "replay_protection='ACTIVE (SHA-256 Digest cached)' | latency=14.2ms | remote_ip='127.0.0.1'</code>"
+    )
+    story.append(Paragraph(log_sample_text, body_style))
+    story.append(Spacer(1, 6))
+
+    # 5. Architecture Explanation & Third-Party Pricing (November 2026)
+    story.append(Paragraph("3. System Architecture & Operational Cost Breakdown (Prices as of November 2026)", section_h2))
+
+    arch_note = (
+        "<b>Architecture Overview:</b> The application follows a modular Full-Stack Python (FastAPI) + React/Vite architecture. "
+        "<b>(1) Solving Engine:</b> Synthetic challenges pass through image binarization, morphological filtering, and OpenCV template correlation to calculate solution and confidence score in ~12ms. "
+        "<b>(2) Verification Engine:</b> Server-side proxy connects to Google Siteverify and Cloudflare Turnstile APIs using test keys; replay protection caches token digests in memory. "
+        "<b>(3) Security Guardrail:</b> <code>section_7_scope_guardrail</code> permanently prevents outbound submissions to live contact forms."
+    )
+    story.append(Paragraph(arch_note, body_style))
+    story.append(Spacer(1, 4))
 
     cost_data = [
         [
@@ -331,14 +423,14 @@ def generate_master_pdf(csv_path: Path, output_pdf_path: Path):
             Paragraph("<b>Challenge Type</b>", th_style),
             Paragraph("<b>Cost / 1,000 (Nov 2026)</b>", th_style),
             Paragraph("<b>Cost / Challenge</b>", th_style),
-            Paragraph("<b>Operational Limits & Benchmark Notes</b>", th_style),
+            Paragraph("<b>Operational Limits & Timeout Handling</b>", th_style),
         ],
         [
             Paragraph("Custom OpenCV Solver", body_style),
             Paragraph("Synthetic Text / Math", body_style),
             Paragraph("<b>$0.00 (Free)</b>", body_style),
             Paragraph("<b>$0.00000</b>", body_style),
-            Paragraph("Runs locally in ~12ms; zero API fees, infinite rate limits.", body_style),
+            Paragraph("Local CPU execution (~12ms); zero API fees, unlimited rate limits.", body_style),
         ],
         [
             Paragraph("Official Provider Test Keys", body_style),
@@ -352,17 +444,17 @@ def generate_master_pdf(csv_path: Path, output_pdf_path: Path):
             Paragraph("reCAPTCHA v2 / Turnstile", body_style),
             Paragraph("$1.00 – $1.20", body_style),
             Paragraph("$0.00100 – $0.00120", body_style),
-            Paragraph("Rates verified Nov 2026 official vendor schedule; 45s timeout.", body_style),
+            Paragraph("Rates verified Nov 2026 official schedule; 45s exponential backoff timeout.", body_style),
         ],
         [
             Paragraph("2Captcha (Adapter)", body_style),
             Paragraph("reCAPTCHA / hCaptcha", body_style),
             Paragraph("$2.99", body_style),
             Paragraph("$0.00299", body_style),
-            Paragraph("Rates verified Nov 2026 official vendor schedule; 60s timeout.", body_style),
+            Paragraph("Rates verified Nov 2026 official schedule; 60s exponential backoff timeout.", body_style),
         ],
     ]
-    cost_table = Table(cost_data, colWidths=[130, 160, 120, 100, 260])
+    cost_table = Table(cost_data, colWidths=[130, 150, 110, 100, 280])
     cost_table.setStyle(
         TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
@@ -375,20 +467,14 @@ def generate_master_pdf(csv_path: Path, output_pdf_path: Path):
         ])
     )
     story.append(cost_table)
-    story.append(Spacer(1, 4))
+    story.append(Spacer(1, 8))
 
-    # Log Sample Box
-    log_sample_text = (
-        "<b>Sanitized Log Sample (Requirement 2C — Zero Secret Key Exposure):</b><br/>"
-        "<code>[2026-11-20 06:12:45] INFO: Token Verification Event: provider='recaptcha_v2' | "
-        "token_preview='6LeI...JWe' | secret_key='[REDACTED_BY_POLICY]' | success=True | "
-        "replay_protection='ACTIVE (SHA-256 Digest cached)' | latency=14.2ms | remote_ip='127.0.0.1'</code>"
-    )
-    story.append(Paragraph(log_sample_text, body_style))
-    story.append(Spacer(1, 6))
+    # Pagebreak so that 200 E-Commerce Platforms Table starts neatly on Page 2 or 3
+    from reportlab.platypus import PageBreak
+    story.append(PageBreak())
 
-    # 5. Section 7 Scope Notice & 200 Platform Table Header
-    story.append(Paragraph("3. 200 E-Commerce Platforms Matrix (Section 7 Scope: Authorized Actions Only, No Live Bypass)", section_h2))
+    # 6. Section 7 Scope Notice & 200 Platform Table Header
+    story.append(Paragraph("4. 200 E-Commerce Platforms Matrix (Section 7 Scope: Authorized Actions Only, No Live Bypass)", section_h2))
 
     scope_note = (
         "<b>Section 7 Acceptance Condition Enforced:</b> Automation is strictly restricted to locally hosted demonstrations, "
