@@ -230,7 +230,7 @@ def generate_master_pdf(csv_path: Path, output_pdf_path: Path):
         [
             Paragraph("<b>GitHub Repo:</b> <font color='#2563eb'><u>https://github.com/MuzammalNazeer/CAPTCHA-Solving-Verification-Tool</u></font>", meta_style),
             Paragraph("<b>Live Vercel App:</b> <font color='#2563eb'><u>https://captchaautomationtool.vercel.app</u></font>", meta_style),
-            Paragraph("<b>Demo Video:</b> <code>Assignment_01_Demonstration_Video.mp4</code> (720p HD, 3m 25s)", meta_style),
+            Paragraph("<b>Demo Video Link:</b> <font color='#2563eb'><u><a href='https://drive.google.com/file/d/1OkpJ_ew4-zDEx97DsniQSwyD0T3zon3x/view?usp=sharing'>Google Drive Video (3–5 Min)</a></u></font>", meta_style),
         ],
         [
             Paragraph("<b>Dataset Evaluated:</b> 200 USA E-Commerce Platforms", meta_style),

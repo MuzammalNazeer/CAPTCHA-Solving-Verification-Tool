@@ -4,8 +4,9 @@
 > **Role:** AI Automation / Full-Stack Developer  
 > **Live Vercel Application:** [https://captchaautomationtool.vercel.app](https://captchaautomationtool.vercel.app)  
 > **GitHub Repository:** [https://github.com/MuzammalNazeer/CAPTCHA-Solving-Verification-Tool](https://github.com/MuzammalNazeer/CAPTCHA-Solving-Verification-Tool)  
+> **Demonstration Video (Google Drive):** [https://drive.google.com/file/d/1OkpJ_ew4-zDEx97DsniQSwyD0T3zon3x/view?usp=sharing](https://drive.google.com/file/d/1OkpJ_ew4-zDEx97DsniQSwyD0T3zon3x/view?usp=sharing)  
 > **Master Submission PDF Report:** [`CAPTCHA_Assessment_Master_Submission_Report.pdf`](./CAPTCHA_Assessment_Master_Submission_Report.pdf)  
-> **3.5-Minute Demonstration Video:** `Assignment_01_Demonstration_Video.mp4`
+> **Local HD Video File:** `Assignment_01_Demonstration_Video.mp4`
 
 ---
 
