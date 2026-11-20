@@ -64,14 +64,42 @@ def automate_contact_form(
 ) -> dict:
     """
     Open a Contact Us form in headless Chromium via Selenium:
-    1. Inspect DOM and identify any CAPTCHA challenge.
-    2. Handle the challenge (custom OCR solver for synthetic, test-token/adapter for providers).
-    3. Fill Contact Us form fields and submit, returning full step-by-step trace.
+    1. Enforce strict Section 7 Scope Guardrail (block external third-party sites).
+    2. Inspect DOM and identify any CAPTCHA challenge.
+    3. Handle the challenge (custom OCR solver for synthetic, test-token/adapter for providers).
+    4. Fill Contact Us form fields and submit, returning full step-by-step trace.
     """
     start = time.perf_counter()
     steps: list[dict] = []
     driver: Optional[webdriver.Chrome] = None
     sandbox_data_mode = False
+
+    # Section 7 Strict Guardrail: Prevent live third-party anti-bot bypassing or unsolicited submissions
+    parsed = urllib.parse.urlparse(form_url)
+    is_authorized_host = (
+        parsed.hostname in ("127.0.0.1", "localhost", "0.0.0.0", "testserver")
+        or "test-forms" in form_url
+        or form_url.startswith("data:")
+    )
+    if not is_authorized_host:
+        return {
+            "success": False,
+            "challenge_type": "external_scope_blocked",
+            "provider": "unauthorized_external_host",
+            "method": "section_7_scope_guardrail",
+            "error": (
+                "SECTION 7 SCOPE ENFORCEMENT: Automation is restricted strictly to "
+                "authorized local test harnesses and synthetic demo environments. "
+                "Submissions against live third-party websites are strictly blocked by policy."
+            ),
+            "steps": [{
+                "step": "scope_check",
+                "status": "blocked",
+                "url": form_url,
+                "reason": "Live third-party site bypass strictly disallowed under Section 7 acceptance conditions.",
+            }],
+            "processing_ms": round((time.perf_counter() - start) * 1000, 2),
+        }
 
     try:
         driver = _build_headless_chrome()
